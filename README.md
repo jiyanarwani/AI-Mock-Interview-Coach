@@ -44,11 +44,3 @@ ai-interview-coach/
 │   └── requirements.txt
 └── README.md
 ```
-
-
-
-If no API keys are configured, the platform will automatically run in **Demo Mode**, utilizing built-in fallback questions and sample response analysis. 
-
-## License
-
-MIT
