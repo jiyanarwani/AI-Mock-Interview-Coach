@@ -1,25 +1,26 @@
 # AI Interview Coach
 
-An AI-powered mock interview platform that conducts voice-based interviews and provides detailed feedback on speaking performance.
+An AI-powered mock interview platform that conducts voice-based interviews and provides detailed feedback on speaking performance, pace, confidence, and structure.
 
 ## Features
 
-- **AI Interviewer** — Role-specific questions tailored to your experience level (behavioral, technical, situational, or mixed)
-- **Speech-to-Text** — Real-time transcription using OpenAI Whisper
-- **Speaking Analysis** — Tracks speaking speed (WPM) and confidence scoring
+- **AI Interviewer** — Role-specific questions tailored to your experience level (behavioral, technical, situational, or mixed).
+- **Dual AI Engines** — Supports **OpenAI** (GPT-4o-mini + Whisper) and **Groq** (Llama 3.3-70b + Whisper-large-v3) for ultra-fast, cost-effective responses.
+- **Speech-to-Text** — Real-time transcription using Whisper.
+- **Speaking Analysis** — Tracks speaking speed (WPM) and confidence scoring.
 - **Filler Word Detection** — Identifies words like "um", "like", "you know", "basically", etc.
-- **STAR Format Coaching** — Evaluates answers against Situation, Task, Action, Result framework with improvement suggestions
-- **PDF Scorecard** — Downloadable interview report with scores, analysis, and feedback
+- **STAR Format Coaching** — Evaluates answers against the Situation, Task, Action, Result framework with suggestions for improvement.
+- **PDF Scorecard** — Downloadable interview report with scores, analysis, and feedback.
 
 ## Tech Stack
 
 | Layer      | Technology                     |
 | ---------- | ------------------------------ |
 | Frontend   | Next.js (React, TypeScript, Tailwind CSS) |
-| Backend    | FastAPI (Python)               |
-| AI         | OpenAI GPT-4o-mini + Whisper   |
-| Database   | PostgreSQL                     |
-| Deployment | Vercel (frontend) + Render (backend) |
+| Backend    | FastAPI (Python, SQLAlchemy, Uvicorn) |
+| AI Engines | Groq (Llama 3.3-70b + Whisper) OR OpenAI (GPT-4o-mini + Whisper) |
+| Database   | SQLite (default dev fallback) OR PostgreSQL |
+| PDF Report | ReportLab |
 
 ## Project Structure
 
@@ -50,82 +51,96 @@ ai-interview-coach/
 
 - Node.js 18+
 - Python 3.11+
-- PostgreSQL
-- OpenAI API key
+- Groq API Key (Free) OR OpenAI API Key
 
 ### Backend Setup
 
-```bash
-cd backend
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
+1. Navigate to the backend directory:
+   ```bash
+   cd backend
+   ```
 
-# Create .env from example
-cp .env.example .env
-# Edit .env with your database URL and OpenAI API key
+2. Create a virtual environment:
+   ```bash
+   python -m venv venv
+   ```
 
-# Run the server
-uvicorn app.main:app --reload --port 8000
-```
+3. Activate the virtual environment:
+   * **Windows (PowerShell)**:
+     ```powershell
+     venv\Scripts\Activate.ps1
+     ```
+   * **Linux/macOS**:
+     ```bash
+     source venv/bin/activate
+     ```
+
+4. Install the dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+5. Configure environment variables. Create a `.env` file in the `backend/` directory (or use the `.env` template in the root directory):
+   ```env
+   DATABASE_URL=sqlite+aiosqlite:///./interview_coach.db
+   JWT_SECRET_KEY=dev-secret-key-change-in-production
+   JWT_ALGORITHM=HS256
+   ACCESS_TOKEN_EXPIRE_MINUTES=60
+   FRONTEND_URL=http://localhost:3000
+
+   # Choose your AI Provider: 'openai' or 'groq'
+   AI_PROVIDER=groq
+
+   # API Keys (add the key for the provider you chose above)
+   GROQ_API_KEY=gsk_your_groq_api_key_here
+   OPENAI_API_KEY=sk-proj-your_openai_api_key_here
+   ```
+
+6. Run the server:
+   ```bash
+   uvicorn app.main:app --reload --port 8000
+   ```
 
 ### Frontend Setup
 
-```bash
-cd frontend
-npm install
+1. Navigate to the frontend directory:
+   ```bash
+   cd frontend
+   ```
 
-# Create .env.local
-echo "NEXT_PUBLIC_API_URL=http://localhost:8000" > .env.local
+2. Install the dependencies:
+   ```bash
+   npm install
+   ```
 
-# Run the dev server
-npm run dev
-```
+3. Configure environment variables. Create a `.env` file in the `frontend/` directory:
+   ```env
+   NEXT_PUBLIC_API_URL=http://localhost:8000
+   ```
 
-### Database Setup
+4. Run the development server:
+   ```bash
+   npm run dev
+   ```
+   The application will be accessible at [http://localhost:3000](http://localhost:3000).
 
-Create a PostgreSQL database:
+## Database Setup
 
+By default, the platform auto-creates and uses a local SQLite database (`interview_coach.db`) in the backend folder. 
+
+To use PostgreSQL, configure a database:
 ```sql
 CREATE DATABASE interview_coach;
 ```
-
-Tables are auto-created on first server startup.
-
-## API Endpoints
-
-| Method | Endpoint                                    | Description              |
-| ------ | ------------------------------------------- | ------------------------ |
-| POST   | `/api/auth/register`                        | Register new user        |
-| POST   | `/api/auth/login`                           | Login                    |
-| POST   | `/api/interviews/`                          | Create interview session |
-| GET    | `/api/interviews/`                          | List user's interviews   |
-| GET    | `/api/interviews/{id}`                      | Get interview details    |
-| POST   | `/api/interviews/{id}/question`             | Get next question        |
-| POST   | `/api/interviews/{id}/transcribe`           | Transcribe audio         |
-| POST   | `/api/interviews/{id}/analyze/{q_number}`   | Analyze response         |
-| POST   | `/api/interviews/{id}/complete`             | Complete interview       |
-| GET    | `/api/interviews/{id}/scorecard`            | Download PDF scorecard   |
-
-## Deployment
-
-### Frontend (Vercel)
-
-1. Connect your GitHub repo to Vercel
-2. Set root directory to `frontend`
-3. Add environment variable: `NEXT_PUBLIC_API_URL` = your Render backend URL
-
-### Backend (Render)
-
-1. Create a new Web Service on Render
-2. Set root directory to `backend`
-3. Build command: `pip install -r requirements.txt`
-4. Start command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
-5. Add environment variables: `DATABASE_URL`, `OPENAI_API_KEY`, `JWT_SECRET_KEY`, `FRONTEND_URL`
+And update the `DATABASE_URL` in your `.env` file:
+```env
+DATABASE_URL=postgresql+asyncpg://username:password@localhost:5432/interview_coach
+```
+Tables are auto-created on the first server startup.
 
 ## Demo Mode
 
-The platform works without an OpenAI API key using built-in fallback questions and sample analysis. Set a valid `OPENAI_API_KEY` for full AI-powered functionality.
+If no API keys are configured, the platform will automatically run in **Demo Mode**, utilizing built-in fallback questions and sample response analysis. 
 
 ## License
 
